@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>おもしろTシャツ</title>
+  <style>
+    :root {
+      --bg-color: #f4f4f7;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-sub: #6b7280;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --danger-color: #ef4444;
+      --border-color: #e5e7eb;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      font-family: var(--font-family);
+      color: var(--text-main);
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-color);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease-in-out;
+      z-index: 1;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    /* 共通ボタン */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background-color: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      pointer-events: auto;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    /* タイトル画面 */
+    #title-screen {
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .title-logo-container {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .title-logo-svg {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 16px;
+    }
+
+    .game-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .game-subtitle {
+      font-size: 14px;
+      color: var(--text-sub);
+    }
+
+    .title-buttons {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .title-buttons .btn {
+      width: 100%;
+      font-size: 18px;
+      padding: 16px;
+    }
+
+    /* お絵描き画面 */
+    #draw-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-color: #e5e7eb;
+      touch-action: none;
+    }
+
+    #tshirt-canvas-wrapper {
+      position: relative;
+      width: 96vw;
+      height: 96vw;
+      max-width: 500px;
+      max-height: 500px;
+    }
+
+    #tshirt-svg-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #paint-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      touch-action: none;
+    }
+
+    .draw-toolbar {
+      background: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tool-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #f9fafb;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tool-btn.active {
+      background: var(--text-main);
+      color: #ffffff;
+      border-color: var(--text-main);
+    }
+
+    .color-picker-list {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px var(--border-color);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .color-dot.active {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px var(--accent-color);
+    }
+
+    /* 価格設定画面 */
+    #price-screen {
+      padding: 24px 16px;
+      align-items: center;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+
+    .price-preview-card {
+      width: 100%;
+      max-width: 320px;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .price-preview-img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-md);
+      background: #f3f4f6;
+    }
+
+    .price-input-section {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .price-display-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .price-input {
+      width: 160px;
+      font-size: 26px;
+      font-weight: 800;
+      text-align: right;
+      padding: 6px 10px;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .price-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .price-adjust-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    .price-adj-btn {
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .price-random-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      border-radius: var(--radius-md);
+      border: 2px solid #8b5cf6;
+      background: #f5f3ff;
+      color: #6d28d9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .price-random-btn:active {
+      transform: scale(0.98);
+      background: #ede9fe;
+    }
+
+    /* リザルト画面 */
+    #result-screen {
+      padding: 24px 16px;
+      align-items: center;
+      justify-content: space-between;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .result-card {
+      width: 100%;
+      max-width: 340px;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .result-img {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+    }
+
+    .result-metrics {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .metric-sub {
+      font-size: 14px;
+      color: var(--text-sub);
+    }
+
+    .metric-sales-count {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .metric-revenue-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-top: 4px;
+    }
+
+    .metric-revenue-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 2px;
+    }
+
+    .metric-revenue-amount {
+      font-size: 30px;
+      font-weight: 900;
+      color: #1d4ed8;
+    }
+
+    .result-actions {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-actions .btn {
+      width: 100%;
+    }
+
+    /* ギャラリー画面 */
+    #gallery-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .gallery-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .gallery-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      align-content: start;
+    }
+
+    .gallery-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .gallery-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: #f9fafb;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .gallery-card-revenue {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+
+    .gallery-card-count {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* モーダル */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 320px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .modal-img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      background: #f9fafb;
+      border-radius: var(--radius-md);
+    }
+
+    /* テキスト入力ダイアログ */
+    #text-dialog-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .text-dialog {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      width: 100%;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .text-dialog input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .text-dialog-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 1. タイトル画面 -->
+    <div id="title-screen" class="screen active">
+      <div class="title-logo-container">
+        <svg class="title-logo-svg" viewBox="0 0 100 100">
+          <path d="M 20,30 L 35,15 L 45,22 C 48,25 52,25 55,22 L 65,15 L 80,30 L 70,40 L 70,85 C 70,88 68,90 65,90 L 35,90 C 32,90 30,88 30,85 L 30,40 Z" fill="#ffffff" stroke="#3b82f6" stroke-width="4" stroke-linejoin="round"/>
+          <circle cx="50" cy="55" r="12" fill="#ef4444" opacity="0.8"/>
+        </svg>
+        <h1 class="game-title">おもしろTシャツ</h1>
+        <p class="game-subtitle">描いて高値で売りさばけ！</p>
+      </div>
+
+      <div class="title-buttons">
+        <button id="btn-start-game" class="btn">ゲームスタート</button>
+        <button id="btn-open-gallery" class="btn btn-secondary">ギャラリー</button>
+      </div>
+    </div>
+
+    <!-- 2. お絵描き画面 -->
+    <div id="draw-screen" class="screen">
+      <div class="draw-header">
+        <button id="btn-draw-back" class="btn btn-secondary" style="padding:8px 14px; font-size:14px;">タイトル</button>
+        <div style="font-weight:700;">デザイン制作</div>
+        <button id="btn-draw-finish" class="btn" style="padding:8px 16px; font-size:14px;">販売へ</button>
+      </div>
+
+      <div class="canvas-container">
+        <div id="tshirt-canvas-wrapper">
+          <!-- Tシャツ背景SVG -->
+          <svg id="tshirt-svg-bg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path id="tshirt-base-path" d="M 12,28 L 32,12 C 38,18 62,18 68,12 L 88,28 L 78,42 L 78,88 C 78,92 74,94 70,94 L 30,94 C 26,94 22,92 22,88 L 22,42 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+          <canvas id="paint-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="draw-toolbar">
+        <div class="toolbar-row">
+          <button id="tool-pen" class="tool-btn active">ペン</button>
+          <button id="tool-eraser" class="tool-btn">消しゴム</button>
+          <button id="tool-text" class="tool-btn">文字入力</button>
+          <button id="btn-undo" class="tool-btn">一つ戻る</button>
+          <button id="btn-redo" class="tool-btn">やり直し</button>
+          <button id="btn-clear" class="tool-btn">全消去</button>
+        </div>
+
+        <div class="toolbar-row" id="color-picker-row">
+          <span style="font-size:12px; font-weight:700; color:var(--text-sub);">インク:</span>
+          <div class="color-picker-list" id="pen-colors"></div>
+        </div>
+
+        <div class="toolbar-row" id="tshirt-color-row">
+          <span style="font-size:12px; font-weight:700; color:var(--text-sub);">服の色:</span>
+          <div class="color-picker-list" id="shirt-colors"></div>
+        </div>
+
+        <div class="toolbar-row" id="size-row">
+          <span style="font-size:12px; font-weight:700; color:var(--text-sub);">太さ:</span>
+          <input type="range" id="brush-size" min="2" max="40" value="8" style="flex:1;">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 価格設定画面 -->
+    <div id="price-screen" class="screen">
+      <h2 style="font-size:20px; font-weight:800; margin-top:10px;">販売価格の設定</h2>
+
+      <div class="price-preview-card">
+        <img id="price-preview-img" class="price-preview-img" alt="Preview">
+      </div>
+
+      <div class="price-input-section">
+        <div class="price-display-wrapper">
+          <input type="number" id="price-input-field" class="price-input" min="100" max="100000" step="100" value="2500">
+          <span>円</span>
+        </div>
+
+        <div class="price-adjust-grid">
+          <button class="price-adj-btn" data-change="-1000">-1,000</button>
+          <button class="price-adj-btn" data-change="-100">-100</button>
+          <button class="price-adj-btn" data-change="100">+100</button>
+          <button class="price-adj-btn" data-change="1000">+1,000</button>
+        </div>
+
+        <button id="btn-price-random" class="price-random-btn">
+          🎲 ランダムで価格を決める
+        </button>
+      </div>
+
+      <div style="width:100%; max-width:320px; display:flex; gap:12px; margin-bottom:10px;">
+        <button id="btn-price-back" class="btn btn-secondary" style="flex:1;">描き直す</button>
+        <button id="btn-sell-submit" class="btn" style="flex:2;">販売する！</button>
+      </div>
+    </div>
+
+    <!-- 4. リザルト画面 -->
+    <div id="result-screen" class="screen">
+      <div class="result-card">
+        <img id="result-img" class="result-img" alt="Result">
+
+        <div class="result-metrics">
+          <div class="metric-sub">販売価格: <span id="result-price-val">2,500</span>円</div>
+          <div id="result-sales-count" class="metric-sales-count">0 枚売れました！</div>
+          <div class="metric-revenue-box">
+            <div class="metric-revenue-title">合計売上金額</div>
+            <div id="result-revenue-val" class="metric-revenue-amount">0円</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button id="btn-share-x" class="btn" style="background-color:#000000; color:#ffffff;">Xで共有する</button>
+        <button id="btn-make-another" class="btn btn-secondary">もう一枚作る</button>
+        <button id="btn-result-title" class="btn btn-secondary">タイトルへ戻る</button>
+      </div>
+    </div>
+
+    <!-- 5. ギャラリー画面 -->
+    <div id="gallery-screen" class="screen">
+      <div class="gallery-header">
+        <button id="btn-gallery-back" class="btn btn-secondary" style="padding:8px 14px; font-size:14px;">タイトル</button>
+        <div style="font-weight:800; font-size:18px;">過去の作品</div>
+        <div style="width:60px;"></div>
+      </div>
+
+      <div id="gallery-grid" class="gallery-grid"></div>
+    </div>
+
+    <!-- ギャラリー詳細モーダル -->
+    <div id="gallery-modal" class="modal-overlay">
+      <div class="modal-card">
+        <img id="modal-img" class="modal-img" alt="Detail">
+        <div style="width:100%; text-align:left; font-size:14px; color:var(--text-sub); display:flex; flex-direction:column; gap:4px;">
+          <div>販売価格: <strong id="modal-price" style="color:var(--text-main);">0円</strong></div>
+          <div>販売枚数: <strong id="modal-count" style="color:var(--text-main);">0枚</strong></div>
+          <div>売上金額: <strong id="modal-revenue" style="color:var(--accent-color); font-size:18px;">0円</strong></div>
+        </div>
+        <div style="width:100%; display:flex; gap:10px; margin-top:6px;">
+          <button id="btn-modal-delete" class="btn btn-danger" style="flex:1; padding:10px;">削除</button>
+          <button id="btn-modal-close" class="btn btn-secondary" style="flex:1; padding:10px;">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- テキスト入力用ダイアログ -->
+    <div id="text-dialog-overlay">
+      <div class="text-dialog">
+        <h4 style="font-size:16px;">Tシャツに書く文字を入力</h4>
+        <input type="text" id="text-input" placeholder="文字を入力してください">
+        <div class="text-dialog-buttons">
+          <button id="btn-text-cancel" class="btn btn-secondary" style="padding:8px 12px; font-size:13px;">キャンセル</button>
+          <button id="btn-text-confirm" class="btn" style="padding:8px 12px; font-size:13px;">配置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* IndexedDB 管理 */
+    const DB_NAME = 'OmoshiroTShirtDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'tshirts';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveItemToDB(item) {
+      try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.add(item);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        console.error('Save failed:', e);
+        alert('保存に失敗しました。');
+      }
+    }
+
+    async function getAllItemsFromDB() {
+      try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result.reverse());
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        console.error('Fetch failed:', e);
+        return [];
+      }
+    }
+
+    async function deleteItemFromDB(id) {
+      try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.delete(id);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        console.error('Delete failed:', e);
+      }
+    }
+
+    /* ゲーム変数 */
+    const PEN_COLORS = ['#1f2937', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ffffff'];
+    const SHIRT_COLORS = ['#ffffff', '#f3f4f6', '#1e293b', '#fee2e2', '#dbeafe', '#d1fae5', '#fef3c7'];
+
+    let currentPenColor = PEN_COLORS[0];
+    let currentShirtColor = SHIRT_COLORS[0];
+    let currentTool = 'pen';
+    let currentPrice = 2500;
+
+    let currentItem = {
+      image: '',
+      price: 2500,
+      salesCount: 0,
+      revenue: 0,
+      createdAt: null
+    };
+
+    let selectedGalleryItemId = null;
+
+    const canvas = document.getElementById('paint-canvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastPoint = null;
+
+    const historyStack = [];
+    const redoStack = [];
+    const MAX_HISTORY = 20;
+
+    let texts = [];
+    let selectedTextIndex = -1;
+    let isDraggingText = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setupUI();
+      setupCanvas();
+      setupDrawingEvents();
+    });
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function setupUI() {
+      const penContainer = document.getElementById('pen-colors');
+      PEN_COLORS.forEach((color, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+        dot.style.backgroundColor = color;
+        dot.addEventListener('click', () => {
+          penContainer.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+          currentPenColor = color;
+          if (currentTool === 'eraser') setTool('pen');
+        });
+        penContainer.appendChild(dot);
+      });
+
+      const shirtContainer = document.getElementById('shirt-colors');
+      SHIRT_COLORS.forEach((color, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+        dot.style.backgroundColor = color;
+        dot.addEventListener('click', () => {
+          shirtContainer.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+          currentShirtColor = color;
+          document.getElementById('tshirt-base-path').setAttribute('fill', color);
+        });
+        shirtContainer.appendChild(dot);
+      });
+
+      document.getElementById('tool-pen').addEventListener('click', () => setTool('pen'));
+      document.getElementById('tool-eraser').addEventListener('click', () => setTool('eraser'));
+      document.getElementById('tool-text').addEventListener('click', () => {
+        setTool('text');
+        openTextDialog();
+      });
+
+      document.getElementById('btn-undo').addEventListener('click', undo);
+      document.getElementById('btn-redo').addEventListener('click', redo);
+      document.getElementById('btn-clear').addEventListener('click', clearCanvas);
+
+      document.getElementById('btn-start-game').addEventListener('click', startNewGame);
+      document.getElementById('btn-open-gallery').addEventListener('click', openGallery);
+      document.getElementById('btn-draw-back').addEventListener('click', () => showScreen('title-screen'));
+      document.getElementById('btn-draw-finish').addEventListener('click', goToPriceScreen);
+      document.getElementById('btn-price-back').addEventListener('click', () => showScreen('draw-screen'));
+      document.getElementById('btn-sell-submit').addEventListener('click', processSales);
+
+      document.getElementById('btn-make-another').addEventListener('click', startNewGame);
+      document.getElementById('btn-result-title').addEventListener('click', () => showScreen('title-screen'));
+      document.getElementById('btn-gallery-back').addEventListener('click', () => showScreen('title-screen'));
+      document.getElementById('btn-share-x').addEventListener('click', shareOnX);
+
+      document.querySelectorAll('.price-adj-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const delta = parseInt(btn.getAttribute('data-change'), 10);
+          updatePrice(currentPrice + delta);
+        });
+      });
+
+      const priceInputField = document.getElementById('price-input-field');
+      priceInputField.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value, 10);
+        if (isNaN(val)) val = 100;
+        currentPrice = Math.max(100, Math.min(100000, val));
+      });
+
+      document.getElementById('btn-price-random').addEventListener('click', () => {
+        const randomSteps = Math.floor(Math.random() * 1000) + 1; 
+        const randomPrice = randomSteps * 100;
+        updatePrice(randomPrice);
+      });
+
+      document.getElementById('btn-modal-close').addEventListener('click', () => {
+        document.getElementById('gallery-modal').classList.remove('active');
+      });
+      document.getElementById('btn-modal-delete').addEventListener('click', deleteGalleryItem);
+
+      document.getElementById('btn-text-cancel').addEventListener('click', closeTextDialog);
+      document.getElementById('btn-text-confirm').addEventListener('click', addTextFromDialog);
+    }
+
+    function setTool(toolName) {
+      currentTool = toolName;
+      document.querySelectorAll('.draw-toolbar .tool-btn').forEach(b => b.classList.remove('active'));
+      if (toolName === 'pen') document.getElementById('tool-pen').classList.add('active');
+      if (toolName === 'eraser') document.getElementById('tool-eraser').classList.add('active');
+      if (toolName === 'text') document.getElementById('tool-text').classList.add('active');
+    }
+
+    function updatePrice(newPrice) {
+      currentPrice = Math.max(100, Math.min(100000, newPrice));
+      document.getElementById('price-input-field').value = currentPrice;
+    }
+
+    function setupCanvas() {
+      const wrapper = document.getElementById('tshirt-canvas-wrapper');
+      const rect = wrapper.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      saveState();
+    }
+
+    function getTShirtPath(w, h) {
+      const path = new Path2D();
+      path.moveTo(w * 0.12, h * 0.28);
+      path.lineTo(w * 0.32, h * 0.12);
+      path.bezierCurveTo(w * 0.38, h * 0.18, w * 0.62, h * 0.18, w * 0.68, h * 0.12);
+      path.lineTo(w * 0.88, h * 0.28);
+      path.lineTo(w * 0.78, h * 0.42);
+      path.lineTo(w * 0.78, h * 0.88);
+      path.bezierCurveTo(w * 0.78, h * 0.92, w * 0.74, h * 0.94, w * 0.70, h * 0.94);
+      path.lineTo(w * 0.30, h * 0.94);
+      path.bezierCurveTo(w * 0.26, h * 0.94, w * 0.22, h * 0.92, w * 0.22, h * 0.88);
+      path.lineTo(w * 0.22, h * 0.42);
+      path.closePath();
+      return path;
+    }
+
+    function applyTShirtClip() {
+      const rect = canvas.getBoundingClientRect();
+      const path = getTShirtPath(rect.width, rect.height);
+      ctx.clip(path);
+    }
+
+    function setupDrawingEvents() {
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      };
+
+      canvas.addEventListener('pointerdown', (e) => {
+        const pos = getPos(e);
+
+        if (currentTool === 'text') {
+          for (let i = texts.length - 1; i >= 0; i--) {
+            const t = texts[i];
+            ctx.font = `${t.size}px bold sans-serif`;
+            const metrics = ctx.measureText(t.text);
+            if (pos.x >= t.x - 10 && pos.x <= t.x + metrics.width + 10 &&
+                pos.y >= t.y - t.size && pos.y <= t.y + 10) {
+              selectedTextIndex = i;
+              isDraggingText = true;
+              dragOffset = { x: pos.x - t.x, y: pos.y - t.y };
+              return;
+            }
+          }
+        }
+
+        isDrawing = true;
+        lastPoint = pos;
+        saveState();
+        drawSegment(pos, pos);
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        const pos = getPos(e);
+
+        if (isDraggingText && selectedTextIndex >= 0) {
+          texts[selectedTextIndex].x = pos.x - dragOffset.x;
+          texts[selectedTextIndex].y = pos.y - dragOffset.y;
+          redrawCanvasContent();
+          return;
+        }
+
+        if (!isDrawing) return;
+        drawSegment(lastPoint, pos);
+        lastPoint = pos;
+      });
+
+      const endDrawing = () => {
+        isDrawing = false;
+        isDraggingText = false;
+        selectedTextIndex = -1;
+      };
+
+      canvas.addEventListener('pointerup', endDrawing);
+      canvas.addEventListener('pointercancel', endDrawing);
+    }
+
+    function drawSegment(start, end) {
+      const brushSize = document.getElementById('brush-size').value;
+
+      ctx.save();
+      applyTShirtClip();
+
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = brushSize;
+
+      if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.stroke();
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentPenColor;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function saveState() {
+      if (historyStack.length >= MAX_HISTORY) {
+        historyStack.shift();
+      }
+      historyStack.push({
+        imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+        texts: JSON.parse(JSON.stringify(texts))
+      });
+      redoStack.length = 0;
+    }
+
+    function undo() {
+      if (historyStack.length <= 1) return;
+      redoStack.push(historyStack.pop());
+      const state = historyStack[historyStack.length - 1];
+      ctx.putImageData(state.imageData, 0, 0);
+      texts = JSON.parse(JSON.stringify(state.texts));
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      const state = redoStack.pop();
+      historyStack.push(state);
+      ctx.putImageData(state.imageData, 0, 0);
+      texts = JSON.parse(JSON.stringify(state.texts));
+    }
+
+    function clearCanvas() {
+      saveState();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      texts = [];
+    }
+
+    function redrawCanvasContent() {
+      if (historyStack.length === 0) return;
+      const state = historyStack[historyStack.length - 1];
+      ctx.putImageData(state.imageData, 0, 0);
+
+      ctx.save();
+      applyTShirtClip();
+      texts.forEach(t => {
+        ctx.font = `${t.size}px bold sans-serif`;
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, t.x, t.y);
+      });
+      ctx.restore();
+    }
+
+    function openTextDialog() {
+      document.getElementById('text-input').value = '';
+      document.getElementById('text-dialog-overlay').style.display = 'flex';
+    }
+
+    function closeTextDialog() {
+      document.getElementById('text-dialog-overlay').style.display = 'none';
+    }
+
+    function addTextFromDialog() {
+      const val = document.getElementById('text-input').value.trim();
+      if (val) {
+        saveState();
+        const rect = canvas.getBoundingClientRect();
+        const size = parseInt(document.getElementById('brush-size').value, 10) * 2 + 16;
+        texts.push({
+          text: val,
+          x: rect.width / 2 - (val.length * size) / 4,
+          y: rect.height / 2,
+          color: currentPenColor,
+          size: size
+        });
+        redrawCanvasContent();
+      }
+      closeTextDialog();
+    }
+
+    function startNewGame() {
+      clearCanvas();
+      updatePrice(2500);
+      currentShirtColor = SHIRT_COLORS[0];
+      document.getElementById('tshirt-base-path').setAttribute('fill', currentShirtColor);
+      showScreen('draw-screen');
+    }
+
+    function goToPriceScreen() {
+      const combinedImage = generateTShirtImageURL();
+      document.getElementById('price-preview-img').src = combinedImage;
+      showScreen('price-screen');
+    }
+
+    function generateTShirtImageURL() {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = 400;
+      offCanvas.height = 400;
+      const offCtx = offCanvas.getContext('2d');
+
+      const path = getTShirtPath(400, 400);
+      offCtx.fillStyle = currentShirtColor;
+      offCtx.fill(path);
+      offCtx.strokeStyle = '#cbd5e1';
+      offCtx.lineWidth = 4;
+      offCtx.stroke(path);
+
+      offCtx.drawImage(canvas, 0, 0, 400, 400);
+
+      return offCanvas.toDataURL('image/jpeg', 0.85);
+    }
+
+    function calculateSales(price) {
+      const rand = Math.random();
+      let pricePenalty = Math.max(0.05, 1 - (price / 80000));
+
+      let count = 0;
+      if (rand < 0.005) {
+        count = Math.floor(Math.random() * 500000 * pricePenalty) + 10000;
+      } else if (rand < 0.03) {
+        count = Math.floor(Math.random() * 8000 * pricePenalty) + 1000;
+      } else if (rand < 0.20) {
+        count = Math.floor(Math.random() * 800 * pricePenalty) + 100;
+      } else if (rand < 0.70) {
+        count = Math.floor(Math.random() * 90 * pricePenalty) + 5;
+      } else {
+        count = Math.floor(Math.random() * 5);
+      }
+
+      return count;
+    }
+
+    async function processSales() {
+      const salesCount = calculateSales(currentPrice);
+      const revenue = currentPrice * salesCount;
+      const imgUrl = generateTShirtImageURL();
+
+      currentItem = {
+        image: imgUrl,
+        price: currentPrice,
+        salesCount: salesCount,
+        revenue: revenue,
+        createdAt: new Date().toISOString()
+      };
+
+      await saveItemToDB(currentItem);
+
+      document.getElementById('result-img').src = imgUrl;
+      document.getElementById('result-price-val').textContent = currentPrice.toLocaleString();
+      
+      showScreen('result-screen');
+      animateCountUp(salesCount, revenue);
+    }
+
+    function animateCountUp(targetCount, targetRevenue) {
+      const countEl = document.getElementById('result-sales-count');
+      const revEl = document.getElementById('result-revenue-val');
+
+      let currentC = 0;
+      let currentR = 0;
+      const duration = 1200;
+      const startTime = performance.now();
+
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+
+        currentC = Math.floor(targetCount * ease);
+        currentR = Math.floor(targetRevenue * ease);
+
+        countEl.textContent = `${currentC.toLocaleString()} 枚売れました！`;
+        revEl.textContent = `${currentR.toLocaleString()}円`;
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          countEl.textContent = `${targetCount.toLocaleString()} 枚売れました！`;
+          revEl.textContent = `${targetRevenue.toLocaleString()}円`;
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    async function openGallery() {
+      const items = await getAllItemsFromDB();
+      const grid = document.getElementById('gallery-grid');
+      grid.innerHTML = '';
+
+      if (items.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-sub); margin-top:40px;">まだ作品がありません</div>';
+      } else {
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'gallery-card';
+          card.innerHTML = `
+            <img src="${item.image}" alt="TShirt">
+            <div class="gallery-card-revenue">${item.revenue.toLocaleString()}円</div>
+            <div class="gallery-card-count">${item.salesCount.toLocaleString()}枚 (${item.price.toLocaleString()}円)</div>
+          `;
+          card.addEventListener('click', () => openGalleryModal(item));
+          grid.appendChild(card);
+        });
+      }
+
+      showScreen('gallery-screen');
+    }
+
+    function openGalleryModal(item) {
+      selectedGalleryItemId = item.id;
+      document.getElementById('modal-img').src = item.image;
+      document.getElementById('modal-price').textContent = `${item.price.toLocaleString()}円`;
+      document.getElementById('modal-count').textContent = `${item.salesCount.toLocaleString()}枚`;
+      document.getElementById('modal-revenue').textContent = `${item.revenue.toLocaleString()}円`;
+      document.getElementById('gallery-modal').classList.add('active');
+    }
+
+    async function deleteGalleryItem() {
+      if (!selectedGalleryItemId) return;
+      if (confirm('この作品を削除しますか？')) {
+        await deleteItemFromDB(selectedGalleryItemId);
+        document.getElementById('gallery-modal').classList.remove('active');
+        openGallery();
+      }
+    }
+
+    async function shareOnX() {
+      const text = `こんなTシャツを作ってみました！\n${currentItem.salesCount.toLocaleString()}枚売れて、合計${currentItem.revenue.toLocaleString()}円！\n\n#おもしろTシャツ #個人開発 #ゲーム開発 #ゲーム制作 #ブラウザゲーム`;
+      
+      const shareCanvas = document.createElement('canvas');
+      shareCanvas.width = 600;
+      shareCanvas.height = 600;
+      const sCtx = shareCanvas.getContext('2d');
+
+      sCtx.fillStyle = '#ffffff';
+      sCtx.fillRect(0, 0, 600, 600);
+
+      sCtx.fillStyle = '#1f2937';
+      sCtx.font = 'bold 28px sans-serif';
+      sCtx.textAlign = 'center';
+      sCtx.fillText('おもしろTシャツ', 300, 50);
+
+      const tshirtImg = new Image();
+      tshirtImg.onload = async () => {
+        sCtx.drawImage(tshirtImg, 100, 70, 400, 400);
+
+        sCtx.fillStyle = '#1e40af';
+        sCtx.font = 'bold 32px sans-serif';
+        sCtx.fillText(`${currentItem.salesCount.toLocaleString()} 枚売れました！`, 300, 500);
+
+        sCtx.fillStyle = '#1d4ed8';
+        sCtx.font = '900 36px sans-serif';
+        sCtx.fillText(`売上: ${currentItem.revenue.toLocaleString()}円`, 300, 550);
+
+        shareCanvas.toBlob(async (blob) => {
+          const file = new File([blob], 'tshirt.png', { type: 'image/png' });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'おもしろTシャツ',
+                text: text,
+                files: [file]
+              });
+              return;
+            } catch (e) {
+              console.log('Share canceled or failed', e);
+            }
+          }
+
+          const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+          window.open(shareUrl, '_blank');
+        }, 'image/png');
+      };
+      tshirtImg.src = currentItem.image;
+    }
+  </script>
+</body>
+</html>
